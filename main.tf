@@ -33,10 +33,10 @@ resource "aws_internet_gateway" "gw" {
   }
 }
 
-   # creating a route table
+# creating a route table
 
 
-  resource "aws_route_table" "produ-terra" {
+resource "aws_route_table" "produ-terra" {
   vpc_id = aws_vpc.prod-vpc.id
 
   route {
@@ -45,8 +45,8 @@ resource "aws_internet_gateway" "gw" {
   }
 
   route {
-    ipv6_cidr_block        = "::/0"
-    gateway_id = aws_internet_gateway.gw.id
+    ipv6_cidr_block = "::/0"
+    gateway_id      = aws_internet_gateway.gw.id
   }
 
   tags = {
@@ -56,11 +56,11 @@ resource "aws_internet_gateway" "gw" {
 
 #creating subnet
 resource "aws_subnet" "produc-terra-subnet" {
-  vpc_id = aws_vpc.prod-vpc.id
-  cidr_block = var.subnet_cidr_prefix
+  vpc_id            = aws_vpc.prod-vpc.id
+  cidr_block        = var.subnet_cidr_prefix
   availability_zone = "us-east-1a"
-  tags={
-    Name="prod-subnet"
+  tags = {
+    Name = "prod-subnet"
   }
 
 }
@@ -113,8 +113,8 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
   security_group_id = aws_security_group.allow_web.id
   cidr_ipv4         = "0.0.0.0/0"
   ip_protocol       = "-1" # semantically equivalent to all ports
-  tags={
-    Names="Allow_web_ssh "
+  tags = {
+    Names = "Allow_web_ssh "
   }
 }
 output "sever_private_ip" {
@@ -129,8 +129,8 @@ resource "aws_network_interface" "web-server-NIC" {
   private_ips     = ["10.0.1.50"]
   security_groups = [aws_security_group.allow_web.id]
   #attachment {
-   # instance     = aws_instance.produ_server.id
-    #device_index = 1
+  # instance     = aws_instance.produ_server.id
+  #device_index = 1
   #}
 }
 
@@ -138,11 +138,11 @@ resource "aws_network_interface" "web-server-NIC" {
 
 # creating a public ip and an elastic ip
 resource "aws_eip" "one" {
-  domain=  "vpc"
+  domain = "vpc"
 
-  network_interface= aws_network_interface.web-server-NIC.id
+  network_interface         = aws_network_interface.web-server-NIC.id
   associate_with_private_ip = "10.0.1.50"
-  depends_on = [aws_internet_gateway.gw ]
+  depends_on                = [aws_internet_gateway.gw]
 }
 output "server_ip" {
   value = aws_eip.one.public_ip
@@ -150,31 +150,31 @@ output "server_ip" {
 }
 variable "subnet_cidr_prefix" {
   description = "cidr block value"
-  type = string
+  type        = string
 
 }
 #Creatign an ec2 server
 
 
 resource "aws_instance" "produ_server" {
-  ami           = "ami-096ef200a877f36af"
-  instance_type = "t3.micro"
+  ami               = "ami-096ef200a877f36af"
+  instance_type     = "t3.micro"
   availability_zone = "us-east-1a"
 
   key_name = "prod_k"
 
- primary_network_interface{
+  primary_network_interface {
 
-   network_interface_id = aws_network_interface.web-server-NIC.id
- }
-
-
+    network_interface_id = aws_network_interface.web-server-NIC.id
+  }
 
 
 
 
 
- user_data = <<-EOF
+
+
+  user_data = <<-EOF
              #!/bin/bash
              sudo dnf update -y
              sudo dnf install httpd -y
@@ -182,7 +182,7 @@ resource "aws_instance" "produ_server" {
              echo"Hi, your very first webserver> /var/www/html/index.html"
              EOF
 
- tags = {
-   Name = "prod-server"
- }
+  tags = {
+    Name = "prod-server"
+  }
 }
